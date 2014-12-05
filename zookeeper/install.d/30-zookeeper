@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -eux
+set -o pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+export zkHome=${zkHome:-"/opt/zookeeper"}
+javaRep=${javaRep:-false}
+zkRep=${zkRep:-false}
+zkVer=${zkVer:-"3.4.6"}
+javaUrl=${javaUrl:-http://javadl.sun.com/webapps/download/AutoDL?BundleId=97360}
+
+#$DISTRO_NAME ubuntu|centos7
+
+if [[ $javaRep == true ]]
+	then
+      install-packages $(map-packages java)
+   else
+      echo "Hello world!"
+fi
+
+if [[ $zkRep == true ]]
+   then
+      install-packages $(map-packages zookeeper zookeeperd)
+   else 
+      useradd -m -d ${zkHome} -s /bin/bash -c "User for zookeeper" -p zookeeper -U zookeeper
+      chown -R zookeeper:zookeeper ${zkHome}
+
+      su - zookeeper -c 'echo "export PATH=${PATH}:"${zkHome}/bin"" >> ~/.bashrc'
+      su -c 'echo "export PATH=${PATH}:"${zkHome}/bin"" >> ~/.bashrc'
+      su - zookeeper -c 'export PATH=${PATH}:"${zkHome}/bin"'
+      su -c 'export PATH=${PATH}:"${zkHome}/bin"'
+
+      cd ${zkHome}
+      if [[ $DISTRO_NAME == "ubuntu" ]]
+         then
+            wget "apache-mirror.rbc.ru/pub/apache/zookeeper/zookeeper-${zkVer}/zookeeper-${zkVer}.tar.gz"
+         else
+            curl -o "zookeeper-${zkVer}.tar.gz" "apache-mirror.rbc.ru/pub/apache/zookeeper/zookeeper-${zkVer}/zookeeper-${zkVer}.tar.gz"
+      fi
+      tar -xvf "zookeeper-${zkVer}.tar.gz"
+      mv zookeeper-${zkVer}/* ../zookeeper
+
+      mkdir -p /etc/zookeeper
+      cp -rf conf/* /etc/zookeeper
+      mkdir -p /usr/share/zookeeper/templates/conf/
+      cd ${zkHome}
+      rm -rf "zookeeper-${zkVer}.tar.gz"
+
+      su -c 'echo "tickTime=2000
+      dataDir=/opt/zookeeper/data
+      clientPort=2181" > /usr/share/zookeeper/templates/conf/zoo.conf'
+
+      su -c 'echo "tickTime=2000
+      dataDir=/opt/zookeeper/data
+      clientPort=2181" > /opt/zookeeper/bin/../conf/zoo.cfg'
+fi
