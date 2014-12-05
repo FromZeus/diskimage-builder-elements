@@ -14,7 +14,12 @@ javaUrl=${javaUrl:-http://javadl.sun.com/webapps/download/AutoDL?BundleId=97360}
 
 if [[ $javaRep == true ]]
 	then
-      install-packages $(map-packages java)
+      if [[ $DISTRO_NAME == "ubuntu" ]]
+         then
+            install-packages java
+         else
+            install-packages $(map-packages java)
+      fi
    else
       echo "Hello world!"
 fi
