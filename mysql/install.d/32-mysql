@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# chkconfig: 2345 95 20
+# description: Some description
+# What your script does (not sure if this is necessary though)
+# processname: mysqlInit
+
+set -eux
+set -o pipefail
+
+export DEBIAN_FROMTEND=noninteractive
+export msqlHome=${msqlHome:-"/opt/mysql"}
+
+msqlRep=${msqlRep:-false}
+msqlBase=${msqlBase:-"testBase"}
+msqlUsr=${msqlUsr:-"testUser"}
+msqlUsrPass=${msqlUsrPass:-"testPass"}
+
+if [[ $msqlRep == true ]]
+   then
+      if [[ $DISTRO_NAME == "ubuntu" ]]
+         then
+            install-packages mysql-server
+            install-packages mysql-client
+         else
+            echo "# MariaDB 10.0 CentOS repository list - created 2014-12-08 10:16 UTC
+# http://mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.0/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1" > /etc/yum.repos.d/MariaDB.repo
+            install-packages $(map-packages mysql-server)
+            install-packages $(map-packages mysql-client)
+
+            echo "#!/bin/bash
+
+case "'$1'" in
+   start)
+      sudo /etc/init.d/mysql start
+
+      MYSQL="'`which mysql`'"
+                  
+      Q1=\"CREATE DATABASE IF NOT EXISTS $msqlBase;\"
+      Q2=\"GRANT USAGE ON *.* TO $msqlUsr@localhost IDENTIFIED BY "'\"'"$msqlUsrPass"'\"'";\"
+      Q3=\"GRANT ALL PRIVILEGES ON $msqlBase.* TO $msqlUsr@localhost;\"
+      Q4=\"FLUSH PRIVILEGES;\"
+      SQL=\""'${Q1}${Q2}${Q3}${Q4}'"\"
+                  
+      #sudo /etc/init.d/mysql start
+                  
+      "'$MYSQL'" -uroot -e "'"$SQL"'"
+      chkconfig "'$0'" off
+   ;;
+   stop|status|restart|reload|force-reload)
+      #do nothing
+      echo \"Hello world!\"
+   ;;
+esac" > /etc/init.d/mysqlInit
+            chmod 755 /etc/init.d/mysqlInit
+
+      fi      
+   else
+      echo "Hello world!"
+fi
