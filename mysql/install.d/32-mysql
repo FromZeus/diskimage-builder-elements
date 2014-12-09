@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# chkconfig: 2345 95 20
-# description: Some description
-# What your script does (not sure if this is necessary though)
-# processname: mysqlInit
-
 set -eux
 set -o pipefail
 
@@ -34,6 +29,11 @@ gpgcheck=1" > /etc/yum.repos.d/MariaDB.repo
             install-packages $(map-packages mysql-client)
 
             echo "#!/bin/bash
+
+# chkconfig: 2345 95 20
+# description: Some description
+# What your script does (not sure if this is necessary though)
+# processname: mysqlInit
 
 case "'$1'" in
    start)
