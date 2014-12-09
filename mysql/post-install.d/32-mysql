@@ -10,7 +10,7 @@ msqlUsrPass=${msqlUsrPass:-"testPass"}
 if [[ $DISTRO_NAME == "ubuntu" ]]
    then
       conf_script="### BEGIN INIT INFO
-# Provides: mysql
+# Provides: mysqlInit
 # Required-Start: "'$remote_fs $syslog'"
 # Required-Stop: "'$remote_fs $syslog'"
 # Default-Start: 2 3 4 5
@@ -55,5 +55,7 @@ pushd /etc/init.d
 if [[ $DISTRO_NAME != "ubuntu" ]]
    then
       chkconfig mysqlInit on
+   else
+      update-rc.d mysqlInit defaults
 fi
 popd
