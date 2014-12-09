@@ -50,15 +50,17 @@ case "'$1'" in
       #sudo /etc/init.d/mysql start
                   
       "'$MYSQL'" -uroot -e "'"$SQL"'"
-      chkconfig "'$0'" off
+      sudo chkconfig "'$0'" off
+      sudo rm -f "'$0'"
    ;;
    stop|status|restart|reload|force-reload)
-      #do nothing
       echo \"Hello world!\"
    ;;
 esac" > /etc/init.d/mysqlInit
             chmod 755 /etc/init.d/mysqlInit
-
+            pushd /etc/init.d
+            chkconfig mysqlInit on
+            popd
       fi      
    else
       echo "Hello world!"
