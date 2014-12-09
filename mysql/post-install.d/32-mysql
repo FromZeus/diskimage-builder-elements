@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -eux
+set -o pipefail
+
+if [[ $DISTRO_NAME == "ubuntu" ]]
+   then
+      conf_script="### BEGIN INIT INFO
+# Provides: mysql
+# Required-Start: "'$remote_fs $syslog'"
+# Required-Stop: "'$remote_fs $syslog'"
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: mysql
+# Description: mysql
+# 
+### END INIT INFO"
+      else
+         conf_script="# chkconfig: 2345 95 20
+# description: mysqlInit
+# processname: mysqlInit"
+fi
+
+echo "#!/bin/bash
+
+$conf_script
+
+case "'$1'" in
+   start)
+      sudo /etc/init.d/mysql start
+      
+      MYSQL="'`which mysql`'"
+                                 
+      Q1=\"CREATE DATABASE IF NOT EXISTS $msqlBase;\"
+      Q2=\"GRANT USAGE ON *.* TO $msqlUsr@localhost IDENTIFIED BY "'\"'"$msqlUsrPass"'\"'";\"
+      Q3=\"GRANT ALL PRIVILEGES ON $msqlBase.* TO $msqlUsr@localhost;\"
+      Q4=\"FLUSH PRIVILEGES;\"
+      SQL=\""'${Q1}${Q2}${Q3}${Q4}'"\"
+                                                                        
+      #sudo /etc/init.d/mysql start
+                                                                  
+      "'$MYSQL'" -uroot -e "'"$SQL"'"
+      sudo rm -f "'$0'"
+   ;;
+   stop|status|restart|reload|force-reload)
+      echo \"Hello world!\"
+   ;;
+esac" > /etc/init.d/mysqlInit
+chmod 755 /etc/init.d/mysqlInit
+pushd /etc/init.d
+if [[ $DISTRO_NAME != "ubuntu" ]]
+   then
+      chkconfig mysqlInit on
+fi
+popd

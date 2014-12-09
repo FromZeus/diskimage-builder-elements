@@ -42,15 +42,17 @@ enabled=1" > /etc/yum.repos.d/mongodb.repo
             larch="i686"
       fi
 
-      cd ${mngHome}
+      pushd ${mngHome}
       if [[ $DISTRO_NAME == "ubuntu" ]]
          then
             wget "http://downloads.mongodb.org/linux/mongodb-linux-${larch}-${mngVer}.tgz"
          else
             curl -O "http://downloads.mongodb.org/linux/mongodb-linux-${larch}-${mngVer}.tgz"
       fi
-      tar -zxvf mongodb-linux-${larch}-${mngVer}.tgz 
+      tar -zxvf mongodb-linux-${larch}-${mngVer}.tgz
+      rm -f mongodb-linux-${larch}-${mngVer}.tgz 
       mv mongodb-linux-${larch}-${mngVer}/* ../mongodb 
+      popd
 
       mkdir -p ${mngDB}
       chown -R mongodb:mongodb ${mngDB}
