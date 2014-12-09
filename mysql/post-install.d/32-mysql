@@ -3,6 +3,10 @@
 set -eux
 set -o pipefail
 
+msqlBase=${msqlBase:-"testBase"}
+msqlUsr=${msqlUsr:-"testUser"}
+msqlUsrPass=${msqlUsrPass:-"testPass"}
+
 if [[ $DISTRO_NAME == "ubuntu" ]]
    then
       conf_script="### BEGIN INIT INFO
