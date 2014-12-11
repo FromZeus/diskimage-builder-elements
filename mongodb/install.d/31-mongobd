@@ -18,6 +18,8 @@ if [[ $mngRep == true ]]
             echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
             apt-get update
             install-packages mongodb-org
+            
+            update-rc.d mongod disable
          else
             echo "[mongodb]
 name=MongoDB Repository
@@ -25,6 +27,8 @@ baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64/
 gpgcheck=0
 enabled=1" > /etc/yum.repos.d/mongodb.repo
             install-packages $(map-packages mongodb-org)
+
+            chkconfig mongod off
       fi
    else
       useradd -m -d ${mngHome} -s /bin/bash -c "User for mongodb" -p mongodb -U mongodb

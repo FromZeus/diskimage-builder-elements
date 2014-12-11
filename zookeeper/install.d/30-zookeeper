@@ -14,14 +14,20 @@ javaUrl=${javaUrl:-http://javadl.sun.com/webapps/download/AutoDL?BundleId=97360}
 
 if [[ $DISTRO_NAME == "ubuntu" ]]
    then
-      install-packages java
+      install-packages default-jre
    else
-      install-packages $(map-packages java)
+      install-packages $(map-packages default-jre)
 fi
 
 if [[ $zkRep == true ]]
    then
       install-packages $(map-packages zookeeper zookeeperd)
+      if [[ $DISTRO_NAME == "ubuntu" ]]
+         then
+            update-rc.d zookeeper disable
+         else
+            chkconfig zookeeper off
+      fi
    else 
       useradd -m -d ${zkHome} -s /bin/bash -c "User for zookeeper" -p zookeeper -U zookeeper
       chown -R zookeeper:zookeeper ${zkHome}
@@ -41,10 +47,10 @@ if [[ $zkRep == true ]]
       tar -xvf "zookeeper-${zkVer}.tar.gz"
       mv zookeeper-${zkVer}/* ../zookeeper
       rm -rf "zookeeper-${zkVer}.tar.gz"
-      popd
 
       mkdir -p /etc/zookeeper
       cp -rf conf/* /etc/zookeeper
+      popd
       mkdir -p /usr/share/zookeeper/templates/conf/
 
       su -c 'echo "tickTime=2000

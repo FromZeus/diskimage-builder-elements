@@ -19,10 +19,12 @@ if [[ $DISTRO_NAME == "ubuntu" ]]
 # Description: mysql
 # 
 ### END INIT INFO"
+         script_off="update-rc.d "'$0'" disable"
       else
          conf_script="# chkconfig: 2345 95 20
 # description: mysqlInit
 # processname: mysqlInit"
+         script_off="chkconfig "'$0'" off"
 fi
 
 echo "#!/bin/bash
@@ -42,8 +44,9 @@ case "'$1'" in
       SQL=\""'${Q1}${Q2}${Q3}${Q4}'"\"
                                                                         
       #sudo /etc/init.d/mysql start
-                                                                  
+      $script_off                                                            
       "'$MYSQL'" -uroot -e "'"$SQL"'"
+
       sudo rm -f "'$0'"
    ;;
    stop|status|restart|reload|force-reload)
