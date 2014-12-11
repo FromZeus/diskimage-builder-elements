@@ -39,14 +39,14 @@ gpgcheck=1" > /etc/yum.repos.d/MariaDB.repo
             echo "deb file:/tmp/mysql ./" > /etc/apt/sources.list
 
             apt-get update
-            apt-get -y --force-yes  install mysql-server mysql-client
+            apt-get -y --force-yes install mysql-server mysql-client
             mv -f /etc/apt/sources.list.tmp /etc/apt/sources.list
             apt-get update
          else
             yum -y remove mariadb-libs-1:5.5.37-1.el7_0.x86_64
 
             install-packages wget createrepo
-            wget -m -p -E -k -K -np -nd http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/
+            wget -r -np -nd --reject "index.html*" http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/
 
             createrepo .
             echo "[local]
@@ -57,7 +57,7 @@ gpgcheck=0
 protect=1
 priority=1" > /etc/yum.repos.d/local.repo
             
-            yum -y install MariaDB-server MariaDB-client
+            install-packages MariaDB-server MariaDB-client
       fi
       popd
       rm -rf  /tmp/mysql
