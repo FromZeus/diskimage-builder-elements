@@ -10,13 +10,12 @@ msqlRep=${msqlRep:-false}
 msqlVer=${msqlVer:-"5.6.22"}
 mariaVer=${mariaVer:-"5.5.40"}
 
+install-packages udev
+
 if [[ $msqlRep == true ]]
    then
-      if [[ $DISTRO_NAME == "ubuntu" ]]
+      if [[ $DISTRO_NAME != "ubuntu" ]]
          then
-            install-packages mysql-server
-            install-packages mysql-client
-         else
             echo "# MariaDB 10.0 CentOS repository list - created 2014-12-08 10:16 UTC
 # http://mariadb.org/mariadb/repositories/
 [mariadb]
@@ -24,59 +23,41 @@ name = MariaDB
 baseurl = http://yum.mariadb.org/10.0/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" > /etc/yum.repos.d/MariaDB.repo
-            install-packages $(map-packages mysql-server)
-            install-packages $(map-packages mysql-client)
-      fi      
+      fi
+      install-packages mysql-server mysql-client 
    else
       mkdir -p /tmp/mysql
       pushd /tmp/mysql
       if [[ $DISTRO_NAME == "ubuntu" ]]
          then
-            curl -LO "dev.mysql.com/get/Downloads/MySQL-5.6/mysql-server_${msqlVer}-2ubuntu14.04_${ARCH}.deb-bundle.tar"
+            curl -LO "dev.mysql.com/get/Downloads/MySQL-${msqlVer%%.}/mysql-server_${msqlVer}-2ubuntu14.04_${ARCH}.deb-bundle.tar"
             tar -xvf mysql-server_${msqlVer}-2ubuntu14.04_${ARCH}.deb-bundle.tar
 
-            apt-get -y install libaio1
+            install-packages libaio1 dpkg-dev
+            dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz
+            mv /etc/apt/sources.list /etc/apt/sources.list.tmp
+            echo "deb file:/tmp/mysql ./" > /etc/apt/sources.list
 
-            debs_list=("mysql-common_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "libmysqlclient18_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "libmysqlclient-dev_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "libmysqld-dev_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-community-client_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-community-server_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-community-source_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-community-bench_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-community-test_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-client_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-server_${msqlVer}-2ubuntu14.04_${ARCH}.deb" 
-            "mysql-testsuite_${msqlVer}-2ubuntu14.04_${ARCH}.deb")
-
-            for i in ${debs_list[@]}
-               do
-                  dpkg --force-all -i $i
-               done               
+            apt-get update
+            apt-get -y --force-yes  install mysql-server mysql-client
+            mv -f /etc/apt/sources.list.tmp /etc/apt/sources.list
+            apt-get update
          else
-            if [[ $ARCH == "amd64" ]]
-               then
-                  larch="x86_64"
-               else
-                  larch="i686"
-            fi
-
-            rpms_list=("http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/MariaDB-${mariaVer}-centos7_0-${larch}-common.rpm" 
-            "http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/MariaDB-${mariaVer}-centos7_0-${larch}-compat.rpm" 
-            "http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/MariaDB-${mariaVer}-centos7_0-${larch}-devel.rpm" 
-            "http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/MariaDB-${mariaVer}-centos7_0-${larch}-shared.rpm" 
-            "http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/MariaDB-${mariaVer}-centos7_0-${larch}-test.rpm" 
-            "http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/MariaDB-${mariaVer}-centos7_0-${larch}-client.rpm" 
-            "http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/MariaDB-${mariaVer}-centos7_0-${larch}-server.rpm")
             yum -y remove mariadb-libs-1:5.5.37-1.el7_0.x86_64
 
-            for i in ${rpms_list[@]}
-               do
-                  curl -LO $i
-                  packn=${i##rpms/}
-                  yum -y install $packn
-               done
+            install-packages wget createrepo
+            wget -m -p -E -k -K -np -nd http://mirror.timeweb.ru/mariadb/mariadb-${mariaVer}/yum/centos7-${ARCH}/rpms/
+
+            createrepo .
+            echo "[local]
+name=CentOS - local packages
+baseurl=file:///tmp/mysql
+enabled=1
+gpgcheck=0
+protect=1
+priority=1" > /etc/yum.repos.d/local.repo
+            
+            yum -y install MariaDB-server MariaDB-client
       fi
       popd
       rm -rf  /tmp/mysql

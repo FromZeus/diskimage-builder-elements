@@ -7,58 +7,24 @@ msqlBase=${msqlBase:-"testBase"}
 msqlUsr=${msqlUsr:-"testUser"}
 msqlUsrPass=${msqlUsrPass:-"testPass"}
 
-if [[ $DISTRO_NAME == "ubuntu" ]]
-   then
-      conf_script="### BEGIN INIT INFO
-# Provides: mysqlInit
-# Required-Start: "'$remote_fs $syslog'"
-# Required-Stop: "'$remote_fs $syslog'"
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 1 6
-# Short-Description: mysql
-# Description: mysql
-# 
-### END INIT INFO"
-         script_off="update-rc.d "'$0'" disable"
-      else
-         conf_script="# chkconfig: 2345 95 20
-# description: mysqlInit
-# processname: mysqlInit"
-         script_off="chkconfig "'$0'" off"
-fi
+mv /etc/rc.local /etc/rc.local.tmp
 
 echo "#!/bin/bash
 
-$conf_script
+# rc.local
 
-case "'$1'" in
-   start)
-      sudo /etc/init.d/mysql start
-      
-      MYSQL="'`which mysql`'"
-                                 
-      Q1=\"CREATE DATABASE IF NOT EXISTS $msqlBase;\"
-      Q2=\"GRANT USAGE ON *.* TO $msqlUsr@localhost IDENTIFIED BY "'\"'"$msqlUsrPass"'\"'";\"
-      Q3=\"GRANT ALL PRIVILEGES ON $msqlBase.* TO $msqlUsr@localhost;\"
-      Q4=\"FLUSH PRIVILEGES;\"
-      SQL=\""'${Q1}${Q2}${Q3}${Q4}'"\"
-                                                                        
-      #sudo /etc/init.d/mysql start
-      $script_off                                                            
-      "'$MYSQL'" -uroot -e "'"$SQL"'"
+sudo /etc/init.d/mysql start
 
-      sudo rm -f "'$0'"
-   ;;
-   stop|status|restart|reload|force-reload)
-      echo \"Hello world!\"
-   ;;
-esac" > /etc/init.d/mysqlInit
-chmod 755 /etc/init.d/mysqlInit
-pushd /etc/init.d
-if [[ $DISTRO_NAME != "ubuntu" ]]
-   then
-      chkconfig mysqlInit on
-   else
-      update-rc.d mysqlInit defaults
-fi
-popd
+MYSQL="'`which mysql`'"
+
+Q1=\"CREATE DATABASE IF NOT EXISTS $msqlBase;\"
+Q2=\"GRANT USAGE ON *.* TO $msqlUsr@localhost IDENTIFIED BY "'\"'"$msqlUsrPass"'\"'";\"
+Q3=\"GRANT ALL PRIVILEGES ON $msqlBase.* TO $msqlUsr@localhost;\"
+Q4=\"FLUSH PRIVILEGES;\"
+SQL=\""'${Q1}${Q2}${Q3}${Q4}'"\"
+
+"'$MYSQL'" -uroot -e "'"$SQL"'"
+
+sudo mv -f /etc/rc.local.tmp /etc/rc.local" > /etc/rc.local
+
+chmod 755 /etc/rc.local
